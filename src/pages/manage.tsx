@@ -1,0 +1,374 @@
+import React, { useEffect, useState } from "react";
+import Head from "next/head";
+import {
+  Button,
+  Form,
+  Input,
+  Popover,
+  Space,
+  Table,
+  Upload,
+} from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
+import { parse } from 'papaparse'
+import { randomBytes } from "crypto";
+import useLocalStorageList from "@/hooks/useLocalStorageList";
+import { readlink } from "fs";
+import ConfirmationButton from "@/components/confirmationButton";
+
+
+const { Column } = Table;
+
+type Book = {
+  id: string,
+  title: string;
+  author: string;
+  explanation: string,
+  date_generated: string,
+};
+
+type ReadBook = {
+  id: string,
+  title: string;
+  author: string;
+  rating: number;
+  dateCompleted: (string | null)
+};
+
+type GoodreadsCSVRow = {
+  "Book Id": string,
+  "Title": string,
+  "Author": string,
+  "Author l-f": string,
+  "Additional Authors": string,
+  "ISBN": string,
+  "ISBN13": string,
+  "My Rating": string,
+  "Average Rating": string,
+  "Publisher": string,
+  "Binding": string,
+  "Number of Pages": string,
+  "Year Published": string,
+  "Original Publication Year": string,
+  "Date Read": string,
+  "Date Added": string,
+  "Bookshelves": string,
+  "Bookshelves with positions": string,
+  "Exclusive Shelf": string,
+  "My Review": string,
+  "Spoiler": string,
+  "Private Notes": string,
+  "Read Count": string,
+  "Owned Copies": string,
+}
+
+function formatReadBooks(bookList: ReadBook[]) {
+  let output = "";
+  for (const book of bookList) {
+    output += `${book.title} - ${book.author}: ${book.rating}\n`;
+  }
+  return output
+}
+
+function generateRecommendationsPrompt(
+  bookList: ReadBook[], num_recs: Number, point: Number,
+) {
+  return `
+You are LibrarianGPT, a recommendation system that strives to give good book recommendations.
+Recommend ${num_recs} books that the I have not read that you think they would really enjoy based the books they've read and their ratings.
+The ratings are on a ${point} point scale when 1 is the worst, meaning I disliked the book and {point} is the best, meaing I loved the book.
+Explain why you made your recommendations in detail, including why I will like them in the context of books and genres I have already read.
+Recommend books from any genres.
+Recommend books from any time period.
+Recommend unique books that are not often suggested.
+Recommend books that are on the shorter side.
+Recommend books that are on the longer side.
+Do not suggest books already in the ratings list.
+Ratings of "0" should be considered "not rated".
+My book ratings:
+
+${formatReadBooks(bookList)}
+
+Format your recomendations as an array of JSON objects with keys for "title", "author" and "explanation".
+For example:
+
+[
+  {
+    "title": "The Overstory",
+    "author": "Richard Powers",
+    "explanation": "your explanation here"
+  }
+]
+
+Your recommendations:
+`
+}
+
+
+export default function ManagePage() {
+  const [form] = Form.useForm();
+
+  const [recList, setRecList, removeRec, addRec, addRecs, clearRecList] = useLocalStorageList<Book>("recommendations", [])
+  const [readList, setReadList, removeRead, addRead, addReads, clearReadsList] = useLocalStorageList<ReadBook>("read", [])
+
+  const [apiToken, setApiToken] = useState<string>("")
+  const [loadingRecs, setLoadingRecs] = useState<boolean>(false)
+
+  useEffect(() => {
+    setApiToken("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")
+  }, [])
+
+  function requestCompletion(apiKey: string, content: string) {
+    setLoadingRecs(true)
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    };
+
+    const data = {
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: content }],
+      temperature: 0.5
+    };
+
+    fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(data)
+    })
+      .then(response => response.json())
+      .then(data => {
+        const content = data["choices"][0]["message"]["content"]
+        const recommendations = JSON.parse(content)
+        setLoadingRecs(false)
+        const newRecs: Book[] = []
+        for (const rec of recommendations) {
+          const newRec: Book = {
+            title: rec["title"],
+            author: rec["author"],
+            explanation: rec["explanation"],
+            date_generated: new Date().toISOString().slice(0, 10),
+            id: randomBytes(16).toString("hex"),
+          }
+          newRecs.push(newRec)
+        }
+        addRecs(newRecs)
+      })
+      .catch(error => console.error(error))
+  }
+
+
+  const handleFile = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const csv = parse<GoodreadsCSVRow>(reader.result as string, { header: true })
+
+      const booksToAdd: ReadBook[] = []
+      for (const row of csv.data) {
+        if (row["Exclusive Shelf"] === "read") {
+          const completed: (string | null) = row["Date Read"] === "" ? null : row["Date Read"].replaceAll("/", "-")
+          booksToAdd.push({
+            id: randomBytes(16).toString("hex"),
+            title: row["Title"],
+            author: row["Author"],
+            rating: parseInt(row["My Rating"], 10),
+            dateCompleted: completed,
+          })
+        }
+      }
+      addReads(booksToAdd)
+    };
+    reader.readAsText(file)
+  };
+
+  function pointScale(readBooks: ReadBook[]) {
+    let maxRating = -Infinity;
+    for (const book of readBooks) {
+      if (book.rating > maxRating) {
+        maxRating = book.rating;
+      }
+    }
+    return maxRating;
+  }
+  return (
+    <div className="min-h-screen font-sans">
+
+      <Head>
+        <title>book recs - marlow.ai</title>
+      </Head>
+      <div className="max-w-3xl mx-auto mt-8">
+        <h1 className="text-4xl font-bold mb-8 text-center">marlow.ai ✨</h1>
+        <h1 className="text-center text-2xl font-light mb-4">Recommendations 🤖</h1>
+
+        <Form
+          form={form}
+          layout="vertical"
+        >
+          <Input.Password placeholder="OPENAI_API_TOKEN" value={apiToken} />
+          <Form.Item className="flex flex-col items-center justify-center p-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="primary"
+                onClick={() => {
+                  const prompt: string = generateRecommendationsPrompt(readList, 5, pointScale(readList))
+                  console.log(prompt)
+                  requestCompletion(apiToken, prompt)
+                }}
+                loading={loadingRecs}
+              >
+                Generate
+              </Button>
+              <ConfirmationButton initialText="Clear" confirmationText="Confirm" actionOnConfirm={clearRecList}></ConfirmationButton>
+            </div>
+          </Form.Item>
+        </Form>
+
+        <Table
+          dataSource={recList}
+          pagination={false}
+          className="mb-8"
+          scroll={{ x: 650 }}
+        >
+          <Column title="Title" dataIndex="title" key="title"
+            sorter={
+              (a: Book, b: Book) => {
+                if (a.title < b.title) {
+                  return -1;
+                } else if (a.title > b.title) {
+                  return 1;
+                } else {
+                  return 0;
+                }
+              }
+            } />
+          <Column title="Author" dataIndex="author" key="author"
+            sorter={
+              (a: ReadBook, b: ReadBook) => {
+                if (a.author < b.author) {
+                  return -1;
+                } else if (a.author > b.author) {
+                  return 1;
+                } else {
+                  return 0;
+                }
+              }
+            }
+          />
+          <Column title="Action" dataIndex="action" key="action" fixed="right"
+            render={(_, record: Book) => (
+              <Space size="middle">
+                <Popover overlayStyle={{ width: "350px" }} content={record.explanation} title={`Why "${record.title}"?`}
+                  className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                >
+                  explain
+                </Popover>
+                <div
+                  className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                  onClick={
+                    () => {
+                      removeRec(record)
+                    }
+                  }
+                >
+                  read
+                </div>
+                <div
+                  className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                  onClick={
+                    () => {
+                      removeRec(record)
+                    }
+                  }
+                >
+                  remove
+                </div>
+              </Space>
+            )}
+          />
+        </Table>
+
+        <h1 className="text-center text-2xl font-light mb-4">Read Books 📚</h1>
+
+
+        <div className="flex flex-col items-center justify-center p-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Upload
+              accept=".csv"
+              showUploadList={false}
+              beforeUpload={handleFile}
+            >
+              <Button type="primary" icon={<UploadOutlined />}>Upload CSV</Button>
+            </Upload>
+            <ConfirmationButton initialText="Clear" confirmationText="Confirm" actionOnConfirm={clearReadsList}></ConfirmationButton>
+          </div>
+        </div>
+
+        <Table
+          dataSource={readList}
+          pagination={false}
+          className="mb-8"
+        >
+          <Column title="Title" dataIndex="title" key="title"
+            sorter={
+              (a: ReadBook, b: ReadBook) => {
+                if (a.title < b.title) {
+                  return -1;
+                } else if (a.title > b.title) {
+                  return 1;
+                } else {
+                  return 0;
+                }
+              }
+            }
+          />
+          <Column title="Author" dataIndex="author" key="author"
+            sorter={
+              (a: ReadBook, b: ReadBook) => {
+                if (a.author < b.author) {
+                  return -1;
+                } else if (a.author > b.author) {
+                  return 1;
+                } else {
+                  return 0;
+                }
+              }
+            }
+          />
+          <Column title="Rating" dataIndex="rating" key="rating"
+            sorter={
+              (a: ReadBook, b: ReadBook) => a.rating - b.rating
+            }
+          />
+          <Column title="Date Completed" dataIndex="dateCompleted" key="dateCompleted"
+            sorter={
+              (a: ReadBook, b: ReadBook) => {
+                if (a.dateCompleted === null) {
+                  return -1
+                } else if (b.dateCompleted === null) {
+                  return 1
+                }
+                return (
+                  new Date(a.dateCompleted).getTime() - new Date(b.dateCompleted).getTime()
+                )
+              }
+            }
+          />
+          <Column title="Action" dataIndex="action" key="action"
+            render={(_, record: ReadBook) => (
+              <Space size="middle">
+                <div
+                  className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                  onClick={
+                    () => removeRead(record)
+                  }
+                >
+                  remove
+                </div>
+              </Space>
+            )}
+          />
+        </Table>
+      </div>
+    </div>
+  );
+};
