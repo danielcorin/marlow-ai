@@ -114,7 +114,7 @@ export default function ManagePage() {
   const [loadingRecs, setLoadingRecs] = useState<boolean>(false)
 
   useEffect(() => {
-    setApiToken("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")
+    setApiToken("")
   }, [])
 
   function requestCompletion(apiKey: string, content: string) {
