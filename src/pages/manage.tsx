@@ -75,7 +75,7 @@ function generateRecommendationsPrompt(
   return `
 You are LibrarianGPT, a recommendation system that strives to give good book recommendations.
 Recommend ${num_recs} books that the I have not read that you think they would really enjoy based the books they've read and their ratings.
-The ratings are on a ${point} point scale when 1 is the worst, meaning I disliked the book and {point} is the best, meaing I loved the book.
+The ratings are on a ${point} point scale when 1 is the worst, meaning I disliked the book and ${point} is the best, meaing I loved the book.
 Explain why you made your recommendations in detail, including why I will like them in the context of books and genres I have already read.
 Recommend books from any genres.
 Recommend books from any time period.
@@ -103,7 +103,6 @@ Your recommendations:
 `
 }
 
-
 export default function ManagePage() {
   const [form] = Form.useForm();
 
@@ -111,6 +110,11 @@ export default function ManagePage() {
   const [readList, setReadList, removeRead, addRead, addReads, clearReadsList] = useLocalStorageObject<ReadBook>("read", [])
 
   const [apiToken, setApiToken] = useState<string>("")
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = event.target;
+    setApiToken(value);
+  };
+
   const [loadingRecs, setLoadingRecs] = useState<boolean>(false)
 
   useEffect(() => {
@@ -220,6 +224,7 @@ export default function ManagePage() {
               value={apiToken}
               className="pr-10"
               style={{ paddingRight: "2.5rem" }}
+              onChange={handleInputChange}
             />
             <div className="absolute inset-y-0 right-0 flex items-center justify-center w-8">
               <Popover overlayStyle={{ width: "350px" }}
