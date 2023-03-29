@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
-import Head from "next/head";
+import ConfirmationButton from "@/components/confirmationButton";
+import useLocalStorageObject from "@/hooks/useLocalStorageObject";
+import { QuestionCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import {
   Button,
   Form,
@@ -7,14 +8,12 @@ import {
   Popover,
   Space,
   Table,
-  Upload,
+  Upload
 } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
-import { parse } from 'papaparse'
 import { randomBytes } from "crypto";
-import useLocalStorageList from "@/hooks/useLocalStorageList";
-import { readlink } from "fs";
-import ConfirmationButton from "@/components/confirmationButton";
+import Head from "next/head";
+import { parse } from 'papaparse';
+import { useEffect, useState } from "react";
 
 
 const { Column } = Table;
@@ -108,8 +107,8 @@ Your recommendations:
 export default function ManagePage() {
   const [form] = Form.useForm();
 
-  const [recList, setRecList, removeRec, addRec, addRecs, clearRecList] = useLocalStorageList<Book>("recommendations", [])
-  const [readList, setReadList, removeRead, addRead, addReads, clearReadsList] = useLocalStorageList<ReadBook>("read", [])
+  const [recList, setRecList, removeRec, addRec, addRecs, clearRecList] = useLocalStorageObject<Book>("recommendations_obj", [])
+  const [readList, setReadList, removeRead, addRead, addReads, clearReadsList] = useLocalStorageObject<ReadBook>("read", [])
 
   const [apiToken, setApiToken] = useState<string>("")
   const [loadingRecs, setLoadingRecs] = useState<boolean>(false)
@@ -190,6 +189,12 @@ export default function ManagePage() {
     }
     return maxRating;
   }
+
+  const apiContent = (
+    <div>
+      Go to <a href="https://platform.openai.com/account/api-keys">OpenAI</a> to get a secret API token for this app, then paste it in this field.
+    </div>
+  );
   return (
     <div className="min-h-screen font-sans">
 
@@ -199,18 +204,45 @@ export default function ManagePage() {
       <div className="max-w-3xl mx-auto mt-8">
         <h1 className="text-4xl font-bold mb-8 text-center">marlow.ai ✨</h1>
         <h1 className="text-center text-2xl font-light mb-4">Recommendations 🤖</h1>
-
+        {
+          Object.values(readList || []).length === 0 ?
+            <div className="text-center text-l font-light mb-4 text-blue-500">
+              Add books you&apos;ve read below before you generate recommendations
+            </div> : null
+        }
         <Form
           form={form}
           layout="vertical"
         >
-          <Input.Password placeholder="OPENAI_API_TOKEN" value={apiToken} />
+          <div className="relative">
+            <Input.Password
+              placeholder="OPENAI_API_TOKEN"
+              value={apiToken}
+              className="pr-10"
+              style={{ paddingRight: "2.5rem" }}
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center justify-center w-8">
+              <Popover overlayStyle={{ width: "350px" }}
+                content={apiContent}
+                title="OpenAI API Token"
+                className="text-blue-500 hover:text-blue-700 cursor-pointer"
+              >
+                <QuestionCircleOutlined className="text-gray-500" />
+              </Popover>
+            </div>
+          </div>
           <Form.Item className="flex flex-col items-center justify-center p-3">
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="primary"
                 onClick={() => {
-                  const prompt: string = generateRecommendationsPrompt(readList, 5, pointScale(readList))
+                  const list = Object.values(readList)
+                  if (list.length === 0) return
+                  const prompt: string = generateRecommendationsPrompt(
+                    list,
+                    5,
+                    pointScale(list),
+                  )
                   console.log(prompt)
                   requestCompletion(apiToken, prompt)
                 }}
@@ -224,7 +256,7 @@ export default function ManagePage() {
         </Form>
 
         <Table
-          dataSource={recList}
+          dataSource={recList ? Object.values(recList) : []}
           pagination={false}
           className="mb-8"
           scroll={{ x: 650 }}
@@ -304,7 +336,7 @@ export default function ManagePage() {
         </div>
 
         <Table
-          dataSource={readList}
+          dataSource={readList ? Object.values(readList) : []}
           pagination={false}
           className="mb-8"
         >

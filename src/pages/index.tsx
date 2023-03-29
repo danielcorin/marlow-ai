@@ -8,7 +8,7 @@ export default function LandingPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="px-4 py-20">
+      <main className="px-4 py-20 font-sans">
         <h1 className="text-4xl font-bold mb-8 text-center">Welcome to marlow.ai ✨</h1>
         <p className="text-xl mb-8 text-center font-light">Good book recommendations, seriously</p>
       </main>

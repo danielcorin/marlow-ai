@@ -1,57 +1,73 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
-const useLocalStorageObject = <T extends object>(
+const useLocalStorageList = <T extends { title: string }>(
   key: string,
-  initialValue: T
+  initialValue: T[]
 ): [
-  T,
-  React.Dispatch<React.SetStateAction<T>>,
-  (key: keyof T) => void,
-  (newObj: T) => void,
+  { [key: string]: T },
+  React.Dispatch<React.SetStateAction<{ [key: string]: T }>>,
+  (item: T) => void,
+  (item: T) => void,
+  (item: T[]) => void,
   () => void
 ] => {
-  const [storedObj, setStoredObj] = useState<T>(() => {
+  const [list, setList] = useState<{ [key: string]: T }>(() => {
     let storedValue;
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       storedValue = localStorage.getItem(key);
-    }
-    if (storedValue) {
-      return JSON.parse(storedValue);
-    } else {
-      return initialValue;
+      if (storedValue) {
+        return JSON.parse(storedValue);
+      } else {
+        const obj = initialValue.reduce((acc, item) => {
+          acc[item.title] = item;
+          return acc;
+        }, {} as { [key: string]: T });
+        localStorage.setItem(key, JSON.stringify(obj));
+        return obj;
+      }
     }
   });
 
-  const removeItem = (itemKey: keyof T) => {
-    setStoredObj((prevObj) => {
-      const newObj = { ...prevObj };
-      delete newObj[itemKey];
-      localStorage.setItem(key, JSON.stringify(newObj));
-      return newObj;
+  const removeItem = (item: T) => {
+    setList((prevList) => {
+      const newList = { ...prevList };
+      delete newList[item.title];
+      localStorage.setItem(key, JSON.stringify(newList));
+      return newList;
     });
   };
 
-  const updateItem = (newObj: T) => {
-    setStoredObj((prevObj) => {
-      const updatedObj = { ...prevObj, ...newObj };
-      localStorage.setItem(key, JSON.stringify(updatedObj));
-      return updatedObj;
+  const addItem = (item: T) => {
+    setList((prevList) => {
+      const newList = { ...prevList, [item.title]: item };
+      localStorage.setItem(key, JSON.stringify(newList));
+      return newList;
     });
   };
 
-  const clearStorage = () => {
-    setStoredObj(initialValue);
+  const addItems = (items: T[]) => {
+    setList((prevList) => {
+      const newList = items.reduce((acc, item) => {
+        acc[item.title] = item;
+        return acc;
+      }, { ...prevList });
+      localStorage.setItem(key, JSON.stringify(newList));
+      return newList;
+    });
+  };
+
+  const clearList = () => {
+    setList({});
     localStorage.removeItem(key);
   };
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(key, JSON.stringify(storedObj));
+    if (typeof window !== "undefined") {
+      localStorage.setItem(key, JSON.stringify(list));
     }
-  }, [key, storedObj]);
+  }, [key, list]);
 
-  return [storedObj, setStoredObj, removeItem, updateItem, clearStorage];
+  return [list, setList, removeItem, addItem, addItems, clearList];
 };
 
-export default useLocalStorageObject;
+export default useLocalStorageList;
