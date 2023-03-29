@@ -5,6 +5,7 @@ const nextConfig = {
     // Enable WebAssembly support for both client and server bundles
     config.experiments = {
       asyncWebAssembly: true,
+      layers: true,
     };
 
     // Add a rule for loading WebAssembly files
