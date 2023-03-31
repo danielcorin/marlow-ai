@@ -1,65 +1,15 @@
+import { ReadListTable } from "@/components/addBookForm";
 import ConfirmationButton from "@/components/confirmationButton";
 import useLocalStorageObject from "@/hooks/useLocalStorageObject";
+import { Book, GoodreadsCSVRow, ReadBook } from "@/types/types";
 import { QuestionCircleOutlined, UploadOutlined } from '@ant-design/icons';
-import {
-  Button,
-  Form,
-  Input,
-  Popover,
-  Space,
-  Table,
-  Upload
-} from 'antd';
-import { randomBytes } from "crypto";
+import { Button, Form, Input, Popover, Space, Table, Upload } from 'antd';
 import Head from "next/head";
 import { parse } from 'papaparse';
 import { useEffect, useState } from "react";
 
 
 const { Column } = Table;
-
-type Book = {
-  id: string,
-  title: string;
-  author: string;
-  explanation: string,
-  date_generated: string,
-};
-
-type ReadBook = {
-  id: string,
-  title: string;
-  author: string;
-  rating: number;
-  dateCompleted: (string | null)
-};
-
-type GoodreadsCSVRow = {
-  "Book Id": string,
-  "Title": string,
-  "Author": string,
-  "Author l-f": string,
-  "Additional Authors": string,
-  "ISBN": string,
-  "ISBN13": string,
-  "My Rating": string,
-  "Average Rating": string,
-  "Publisher": string,
-  "Binding": string,
-  "Number of Pages": string,
-  "Year Published": string,
-  "Original Publication Year": string,
-  "Date Read": string,
-  "Date Added": string,
-  "Bookshelves": string,
-  "Bookshelves with positions": string,
-  "Exclusive Shelf": string,
-  "My Review": string,
-  "Spoiler": string,
-  "Private Notes": string,
-  "Read Count": string,
-  "Owned Copies": string,
-}
 
 function formatReadBooks(bookList: ReadBook[]) {
   let output = "";
@@ -151,7 +101,6 @@ export default function ManagePage() {
             author: rec["author"],
             explanation: rec["explanation"],
             date_generated: new Date().toISOString().slice(0, 10),
-            id: randomBytes(16).toString("hex"),
           }
           newRecs.push(newRec)
         }
@@ -169,9 +118,8 @@ export default function ManagePage() {
       const booksToAdd: ReadBook[] = []
       for (const row of csv.data) {
         if (row["Exclusive Shelf"] === "read") {
-          const completed: (string | null) = row["Date Read"] === "" ? null : row["Date Read"].replaceAll("/", "-")
+          const completed: (string | undefined) = row["Date Read"] === "" ? undefined : row["Date Read"].replaceAll("/", "-")
           booksToAdd.push({
-            id: randomBytes(16).toString("hex"),
             title: row["Title"],
             author: row["Author"],
             rating: parseInt(row["My Rating"], 10),
@@ -340,6 +288,8 @@ export default function ManagePage() {
           </div>
         </div>
 
+        <ReadListTable addRead={addRead} />
+
         <Table
           dataSource={readList ? Object.values(readList) : []}
           pagination={false}
@@ -379,9 +329,9 @@ export default function ManagePage() {
           <Column title="Date Completed" dataIndex="dateCompleted" key="dateCompleted"
             sorter={
               (a: ReadBook, b: ReadBook) => {
-                if (a.dateCompleted === null) {
+                if (a.dateCompleted === undefined) {
                   return -1
-                } else if (b.dateCompleted === null) {
+                } else if (b.dateCompleted === undefined) {
                   return 1
                 }
                 return (
