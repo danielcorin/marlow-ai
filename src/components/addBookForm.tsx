@@ -6,7 +6,7 @@ type Props = {
   addRead: (record: ReadBook) => void
 }
 
-export const ReadListTable: React.FC<Props> = ({ addRead }) => {
+export const AddBookForm: React.FC<Props> = ({ addRead }) => {
   const [form] = Form.useForm()
   const [newBook, setNewBook] = useState<ReadBook>({
     title: '',

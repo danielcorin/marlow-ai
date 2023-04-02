@@ -1,9 +1,11 @@
-import { ReadListTable } from "@/components/addBookForm";
+import { AddBookForm } from "@/components/addBookForm";
 import ConfirmationButton from "@/components/confirmationButton";
+import useLocalStorage from "@/hooks/useLocalStorage";
 import useLocalStorageObject from "@/hooks/useLocalStorageObject";
 import { Book, GoodreadsCSVRow, ReadBook } from "@/types/types";
 import { QuestionCircleOutlined, UploadOutlined } from '@ant-design/icons';
-import { Button, Form, Input, Popover, Space, Table, Upload } from 'antd';
+import { Button, Checkbox, Form, Input, Popover, Space, Table, Upload } from 'antd';
+import ColumnGroup from "antd/es/table/ColumnGroup";
 import Head from "next/head";
 import { parse } from 'papaparse';
 import { useEffect, useState } from "react";
@@ -43,9 +45,7 @@ For example:
 
 [
   {
-    "title": "The Overstory",
-    "author": "Richard Powers",
-    "explanation": "your explanation here"
+    "title": "The Overstory", "author": "Richard Powers", "explanation": "your explanation here"
   }
 ]
 
@@ -56,14 +56,20 @@ Your recommendations:
 export default function ManagePage() {
   const [form] = Form.useForm();
 
-  const [recList, setRecList, removeRec, addRec, addRecs, clearRecList] = useLocalStorageObject<Book>("recommendations_obj", [])
-  const [readList, setReadList, removeRead, addRead, addReads, clearReadsList] = useLocalStorageObject<ReadBook>("read", [])
+  const [
+    recList, setRecList, removeRec, addRec, addRecs, updateRec, clearRecList,
+  ] = useLocalStorageObject<Book>("recommendations_obj", [])
+  const [
+    readList, setReadList, removeRead, addRead, addReads, updateRead, clearReadsList,
+  ] = useLocalStorageObject<ReadBook>("read", [])
 
-  const [apiToken, setApiToken] = useState<string>("")
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = event.target;
-    setApiToken(value);
-  };
+  const [selectedReadBooks, setSelectedReadBooks] = useState<ReadBook[]>([])
+
+  const [apiToken, setApiToken] = useLocalStorage("token", "");
+
+  function handleApiTokenInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setApiToken(event.target.value);
+  }
 
   const [loadingRecs, setLoadingRecs] = useState<boolean>(false)
 
@@ -81,7 +87,7 @@ export default function ManagePage() {
     const data = {
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: content }],
-      temperature: 0.5
+      temperature: 0.75
     };
 
     fetch('https://api.openai.com/v1/chat/completions', {
@@ -91,6 +97,7 @@ export default function ManagePage() {
     })
       .then(response => response.json())
       .then(data => {
+        console.log(data);
         const content = data["choices"][0]["message"]["content"]
         const recommendations = JSON.parse(content)
         setLoadingRecs(false)
@@ -106,7 +113,10 @@ export default function ManagePage() {
         }
         addRecs(newRecs)
       })
-      .catch(error => console.error(error))
+      .catch(error => {
+        setLoadingRecs(false)
+        console.error(error)
+      })
   }
 
 
@@ -147,6 +157,13 @@ export default function ManagePage() {
       Go to <a href="https://platform.openai.com/account/api-keys">OpenAI</a> to get a secret API token for this app, then paste it in this field.
     </div>
   );
+
+  const rowSelection = {
+    onChange: (selectedRowKeys: React.Key[], selectedRows: ReadBook[]) => {
+      setSelectedReadBooks(selectedRows)
+    },
+  };
+
   return (
     <div className="min-h-screen font-sans">
 
@@ -172,7 +189,7 @@ export default function ManagePage() {
               value={apiToken}
               className="pr-10"
               style={{ paddingRight: "2.5rem" }}
-              onChange={handleInputChange}
+              onChange={handleApiTokenInputChange}
             />
             <div className="absolute inset-y-0 right-0 flex items-center justify-center w-8">
               <Popover overlayStyle={{ width: "350px" }}
@@ -189,7 +206,12 @@ export default function ManagePage() {
               <Button
                 type="primary"
                 onClick={() => {
-                  const list = Object.values(readList)
+                  console.log(readList);
+                  console.log(selectedReadBooks);
+                  const list = Object.values(
+                    selectedReadBooks.length !== 0 ? selectedReadBooks : readList
+                  )
+
                   if (list.length === 0) return
                   const prompt: string = generateRecommendationsPrompt(
                     list,
@@ -213,6 +235,7 @@ export default function ManagePage() {
           pagination={false}
           className="mb-8"
           scroll={{ x: 650 }}
+          rowKey="title"
         >
           <Column title="Title" dataIndex="title" key="title"
             sorter={
@@ -288,12 +311,14 @@ export default function ManagePage() {
           </div>
         </div>
 
-        <ReadListTable addRead={addRead} />
+        <AddBookForm addRead={addRead} />
 
         <Table
           dataSource={readList ? Object.values(readList) : []}
           pagination={false}
           className="mb-8"
+          rowSelection={rowSelection}
+          rowKey="title"
         >
           <Column title="Title" dataIndex="title" key="title"
             sorter={

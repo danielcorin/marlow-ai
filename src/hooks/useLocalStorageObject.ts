@@ -4,13 +4,14 @@ const useLocalStorageList = <T extends { title: string }>(
   key: string,
   initialValue: T[]
 ): [
-  { [key: string]: T },
-  React.Dispatch<React.SetStateAction<{ [key: string]: T }>>,
-  (item: T) => void,
-  (item: T) => void,
-  (item: T[]) => void,
-  () => void
-] => {
+    { [key: string]: T },
+    React.Dispatch<React.SetStateAction<{ [key: string]: T }>>,
+    (item: T) => void,
+    (item: T) => void,
+    (item: T[]) => void,
+    (item: T) => void,
+    () => void
+  ] => {
   const [list, setList] = useState<{ [key: string]: T }>(() => {
     let storedValue;
     if (typeof window !== "undefined") {
@@ -56,6 +57,14 @@ const useLocalStorageList = <T extends { title: string }>(
     });
   };
 
+  const updateItem = (item: T) => {
+    setList((prevList) => {
+      const newList = { ...prevList, [item.title]: item };
+      localStorage.setItem(key, JSON.stringify(newList));
+      return newList;
+    });
+  };
+
   const clearList = () => {
     setList({});
     localStorage.removeItem(key);
@@ -67,7 +76,7 @@ const useLocalStorageList = <T extends { title: string }>(
     }
   }, [key, list]);
 
-  return [list, setList, removeItem, addItem, addItems, clearList];
+  return [list, setList, removeItem, addItem, addItems, updateItem, clearList];
 };
 
 export default useLocalStorageList;

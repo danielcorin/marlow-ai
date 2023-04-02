@@ -1,16 +1,16 @@
 export type Book = {
-  title: string;
-  author: string;
+  title: string,
+  author: string,
   explanation: string,
   date_generated: string,
-};
+}
 
 export type ReadBook = {
-  include?: boolean;
-  title: string;
-  author: string;
-  rating: number;
-  dateCompleted?: string;
+  include?: boolean,
+  title: string,
+  author: string,
+  rating: number,
+  dateCompleted?: string,
 };
 
 export type GoodreadsCSVRow = {
