@@ -1,22 +1,20 @@
-import { AddBookForm } from "@/components/addBookForm";
-import ConfirmationButton from "@/components/confirmationButton";
-import useLocalStorage from "@/hooks/useLocalStorage";
-import useLocalStorageObject from "@/hooks/useLocalStorageObject";
-import { Book, GoodreadsCSVRow, ReadBook } from "@/types/types";
-import { QuestionCircleOutlined, UploadOutlined } from '@ant-design/icons';
-import { Button, Checkbox, Form, Input, Popover, Space, Table, Upload } from 'antd';
-import ColumnGroup from "antd/es/table/ColumnGroup";
-import Head from "next/head";
-import { parse } from 'papaparse';
-import { useEffect, useState } from "react";
-
-
-const { Column } = Table;
+import { AddBookForm } from "@/components/AddBookForm"
+import ConfirmationButton from "@/components/ConfirmationButton"
+import ReadTable from "@/components/ReadTable"
+import RecommendationTable from "@/components/RecommendationTable"
+import useLocalStorage from "@/hooks/useLocalStorage"
+import useLocalStorageObject from "@/hooks/useLocalStorageObject"
+import { Book, GoodreadsCSVRow, ReadBook } from "@/types/types"
+import { QuestionCircleOutlined, UploadOutlined } from '@ant-design/icons'
+import { Button, Form, Input, Popover, Space, Table, Upload } from 'antd'
+import Head from "next/head"
+import { parse } from 'papaparse'
+import { useEffect, useState } from "react"
 
 function formatReadBooks(bookList: ReadBook[]) {
-  let output = "";
+  let output = ""
   for (const book of bookList) {
-    output += `${book.title} - ${book.author}: ${book.rating}\n`;
+    output += `${book.title} - ${book.author}: ${book.rating}\n`
   }
   return output
 }
@@ -26,15 +24,13 @@ function generateRecommendationsPrompt(
 ) {
   return `
 You are LibrarianGPT, a recommendation system that strives to give good book recommendations.
-Recommend ${num_recs} books that the I have not read that you think they would really enjoy based the books they've read and their ratings.
-The ratings are on a ${point} point scale when 1 is the worst, meaning I disliked the book and ${point} is the best, meaing I loved the book.
-Explain why you made your recommendations in detail, including why I will like them in the context of books and genres I have already read.
+Recommend ${num_recs} books that the I have not read that you think I would really enjoy based the books I've read and my ratings.
+The ratings are on a ${point} point scale where 1 is the worst, meaning I disliked the book and ${point} is the best, meaning I loved the book.
+Explain why you made your recommendations in detail, including why you think I will like them in the context of books and genres I have already read.
 Recommend books from any genres.
 Recommend books from any time period.
 Recommend unique books that are not often suggested.
-Recommend books that are on the shorter side.
-Recommend books that are on the longer side.
-Do not suggest books already in the ratings list.
+Do not recommend books already in the ratings list.
 Ratings of "0" should be considered "not rated".
 My book ratings:
 
@@ -54,7 +50,7 @@ Your recommendations:
 }
 
 export default function ManagePage() {
-  const [form] = Form.useForm();
+  const [form] = Form.useForm()
 
   const [
     recList, setRecList, removeRec, addRec, addRecs, updateRec, clearRecList,
@@ -65,10 +61,10 @@ export default function ManagePage() {
 
   const [selectedReadBooks, setSelectedReadBooks] = useState<ReadBook[]>([])
 
-  const [apiToken, setApiToken] = useLocalStorage("token", "");
+  const [apiToken, setApiToken] = useLocalStorage("token", "")
 
   function handleApiTokenInputChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setApiToken(event.target.value);
+    setApiToken(event.target.value)
   }
 
   const [loadingRecs, setLoadingRecs] = useState<boolean>(false)
@@ -82,13 +78,13 @@ export default function ManagePage() {
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
-    };
+    }
 
     const data = {
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: content }],
       temperature: 0.75
-    };
+    }
 
     fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -97,7 +93,7 @@ export default function ManagePage() {
     })
       .then(response => response.json())
       .then(data => {
-        console.log(data);
+        console.log(data)
         const content = data["choices"][0]["message"]["content"]
         const recommendations = JSON.parse(content)
         setLoadingRecs(false)
@@ -119,7 +115,6 @@ export default function ManagePage() {
       })
   }
 
-
   const handleFile = (file: File) => {
     const reader = new FileReader()
     reader.onload = () => {
@@ -138,31 +133,31 @@ export default function ManagePage() {
         }
       }
       addReads(booksToAdd)
-    };
+    }
     reader.readAsText(file)
-  };
+  }
 
   function pointScale(readBooks: ReadBook[]) {
-    let maxRating = -Infinity;
+    let maxRating = -Infinity
     for (const book of readBooks) {
       if (book.rating > maxRating) {
-        maxRating = book.rating;
+        maxRating = book.rating
       }
     }
-    return maxRating;
+    return maxRating
   }
 
   const apiContent = (
     <div>
       Go to <a href="https://platform.openai.com/account/api-keys">OpenAI</a> to get a secret API token for this app, then paste it in this field.
     </div>
-  );
+  )
 
   const rowSelection = {
     onChange: (selectedRowKeys: React.Key[], selectedRows: ReadBook[]) => {
       setSelectedReadBooks(selectedRows)
     },
-  };
+  }
 
   return (
     <div className="min-h-screen font-sans">
@@ -176,7 +171,7 @@ export default function ManagePage() {
         {
           Object.values(readList || []).length === 0 ?
             <div className="text-center text-l font-light mb-4 text-blue-500">
-              Add books you&apos;ve read below before you generate recommendations
+              Add books you&aposve read below before you generate recommendations
             </div> : null
         }
         <Form
@@ -206,8 +201,6 @@ export default function ManagePage() {
               <Button
                 type="primary"
                 onClick={() => {
-                  console.log(readList);
-                  console.log(selectedReadBooks);
                   const list = Object.values(
                     selectedReadBooks.length !== 0 ? selectedReadBooks : readList
                   )
@@ -225,75 +218,20 @@ export default function ManagePage() {
               >
                 Generate
               </Button>
-              <ConfirmationButton initialText="Clear" confirmationText="Confirm" actionOnConfirm={clearRecList}></ConfirmationButton>
+              <ConfirmationButton
+                initialText="Clear"
+                confirmationText="Confirm"
+                actionOnConfirm={clearRecList}
+              />
             </div>
           </Form.Item>
         </Form>
 
-        <Table
-          dataSource={recList ? Object.values(recList) : []}
-          pagination={false}
-          className="mb-8"
-          scroll={{ x: 650 }}
-          rowKey="title"
-        >
-          <Column title="Title" dataIndex="title" key="title"
-            sorter={
-              (a: Book, b: Book) => {
-                if (a.title < b.title) {
-                  return -1;
-                } else if (a.title > b.title) {
-                  return 1;
-                } else {
-                  return 0;
-                }
-              }
-            } />
-          <Column title="Author" dataIndex="author" key="author"
-            sorter={
-              (a: ReadBook, b: ReadBook) => {
-                if (a.author < b.author) {
-                  return -1;
-                } else if (a.author > b.author) {
-                  return 1;
-                } else {
-                  return 0;
-                }
-              }
-            }
-          />
-          <Column title="Action" dataIndex="action" key="action" fixed="right"
-            render={(_, record: Book) => (
-              <Space size="middle">
-                <Popover overlayStyle={{ width: "350px" }} content={record.explanation} title={`Why "${record.title}"?`}
-                  className="text-blue-500 hover:text-blue-700 cursor-pointer"
-                >
-                  explain
-                </Popover>
-                <div
-                  className="text-blue-500 hover:text-blue-700 cursor-pointer"
-                  onClick={
-                    () => {
-                      removeRec(record)
-                    }
-                  }
-                >
-                  read
-                </div>
-                <div
-                  className="text-blue-500 hover:text-blue-700 cursor-pointer"
-                  onClick={
-                    () => {
-                      removeRec(record)
-                    }
-                  }
-                >
-                  remove
-                </div>
-              </Space>
-            )}
-          />
-        </Table>
+        <RecommendationTable
+          recList={recList}
+          removeRec={removeRec}
+          addRead={addRead}
+        />
 
         <h1 className="text-center text-2xl font-light mb-4">Read Books 📚</h1>
 
@@ -313,74 +251,8 @@ export default function ManagePage() {
 
         <AddBookForm addRead={addRead} />
 
-        <Table
-          dataSource={readList ? Object.values(readList) : []}
-          pagination={false}
-          className="mb-8"
-          rowSelection={rowSelection}
-          rowKey="title"
-        >
-          <Column title="Title" dataIndex="title" key="title"
-            sorter={
-              (a: ReadBook, b: ReadBook) => {
-                if (a.title < b.title) {
-                  return -1;
-                } else if (a.title > b.title) {
-                  return 1;
-                } else {
-                  return 0;
-                }
-              }
-            }
-          />
-          <Column title="Author" dataIndex="author" key="author"
-            sorter={
-              (a: ReadBook, b: ReadBook) => {
-                if (a.author < b.author) {
-                  return -1;
-                } else if (a.author > b.author) {
-                  return 1;
-                } else {
-                  return 0;
-                }
-              }
-            }
-          />
-          <Column title="Rating" dataIndex="rating" key="rating"
-            sorter={
-              (a: ReadBook, b: ReadBook) => a.rating - b.rating
-            }
-          />
-          <Column title="Date Completed" dataIndex="dateCompleted" key="dateCompleted"
-            sorter={
-              (a: ReadBook, b: ReadBook) => {
-                if (a.dateCompleted === undefined) {
-                  return -1
-                } else if (b.dateCompleted === undefined) {
-                  return 1
-                }
-                return (
-                  new Date(a.dateCompleted).getTime() - new Date(b.dateCompleted).getTime()
-                )
-              }
-            }
-          />
-          <Column title="Action" dataIndex="action" key="action"
-            render={(_, record: ReadBook) => (
-              <Space size="middle">
-                <div
-                  className="text-blue-500 hover:text-blue-700 cursor-pointer"
-                  onClick={
-                    () => removeRead(record)
-                  }
-                >
-                  remove
-                </div>
-              </Space>
-            )}
-          />
-        </Table>
+        <ReadTable readList={readList} removeRead={removeRead} rowSelection={rowSelection}/>
       </div>
     </div>
-  );
-};
+  )
+}

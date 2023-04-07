@@ -6,7 +6,6 @@ export type Book = {
 }
 
 export type ReadBook = {
-  include?: boolean,
   title: string,
   author: string,
   rating: number,
