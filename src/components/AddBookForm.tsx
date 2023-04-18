@@ -1,7 +1,8 @@
-import { useState } from 'react'
 import { ReadBook } from '@/types/types'
-import { Form, Input, Button, DatePicker } from 'antd'
-import dayjs, { Dayjs } from "dayjs";
+import { StarFilled } from '@ant-design/icons'
+import { Button, DatePicker, Form, Input, Rate } from 'antd'
+import dayjs, { Dayjs } from "dayjs"
+import { useState } from 'react'
 
 type Props = {
   addRead: (record: ReadBook) => void
@@ -42,6 +43,10 @@ export const AddBookForm: React.FC<Props> = ({ addRead }) => {
     setNewBook((prevBook) => ({ ...prevBook, ["dateCompleted"]: completed }))
   }
 
+  const handleRatingChange = (n: number) => {
+    setNewBook((prevBook) => ({ ...prevBook, ["rating"]: n }))
+  }
+
   return (
     <Form form={form} onFinish={() => handleFormSubmit()} layout="inline">
       <Form.Item name="title" label="" rules={[{ required: true, message: 'Please input the title!' }]} style={{ display: 'inline-block' }}>
@@ -51,10 +56,15 @@ export const AddBookForm: React.FC<Props> = ({ addRead }) => {
         <Input placeholder="Author" name="author" value={newBook.author} onChange={handleInputChange} />
       </Form.Item>
       <Form.Item name="rating" label="" rules={[{ required: true, message: 'Please input the rating!' }]} style={{ display: 'inline-block' }}>
-        <Input type="number" name="rating" placeholder="Rating" value={newBook.rating} onChange={handleInputChange} />
+        <Rate
+          character={<StarFilled />}
+          value={newBook.rating}
+          onChange={handleRatingChange}
+          tooltips={["Didn't like it", "It was ok", "Liked it", "Really like it", "It was amazing"]}
+        />
       </Form.Item>
       <Form.Item name="dateCompleted" label="" style={{ display: 'inline-block' }}>
-        <DatePicker format={dateFormat} value={dayjs(newBook.dateCompleted)} onChange={handleDateChange}/>
+        <DatePicker format={dateFormat} value={dayjs(newBook.dateCompleted)} onChange={handleDateChange} placeholder="Completed on"/>
       </Form.Item>
       <Form.Item style={{ display: 'inline-block' }}>
         <Button htmlType="submit">+</Button>
