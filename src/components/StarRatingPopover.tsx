@@ -34,8 +34,6 @@ const StarRatingPopover: React.FC<StarRatingPopoverProps> = ({
   const [dateCompleted, setDateCompleted] = useState<string>(dayjs().format("YYYY-MM-DD"))
 
   const handleDateChange = (date: Dayjs | null, dateString: string) => {
-    console.log(date)
-    console.log(dateString)
     setDateCompleted(dateString)
   }
 

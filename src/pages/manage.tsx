@@ -171,7 +171,7 @@ export default function ManagePage() {
         {
           Object.values(readList || []).length === 0 ?
             <div className="text-center text-l font-light mb-4 text-blue-500">
-              Add books you&aposve read below before you generate recommendations
+              Add books you&apos;ve read below before you generate recommendations
             </div> : null
         }
         <Form
