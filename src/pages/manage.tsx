@@ -234,7 +234,9 @@ export default function ManagePage() {
         />
 
         <h1 className="text-center text-2xl font-light mb-4">Read Books 📚</h1>
-
+        <div className="text-center text-l font-light mb-4 text-blue-500">
+          Download your Goodreads history <a href="https://www.goodreads.com/review/import">here</a>
+        </div>
 
         <div className="flex flex-col items-center justify-center p-3">
           <div className="grid grid-cols-2 gap-2">
@@ -251,7 +253,7 @@ export default function ManagePage() {
 
         <AddBookForm addRead={addRead} />
 
-        <ReadTable readList={readList} removeRead={removeRead} rowSelection={rowSelection}/>
+        <ReadTable readList={readList} removeRead={removeRead} rowSelection={rowSelection} />
       </div>
     </div>
   )
