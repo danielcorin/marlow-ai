@@ -149,7 +149,7 @@ export default function ManagePage() {
 
   const apiContent = (
     <div>
-      Go to <a href="https://platform.openai.com/account/api-keys">OpenAI</a> to get a secret API token for this app, then paste it in this field.
+      Go to <a href="https://platform.openai.com/account/api-keys" target="_blank">OpenAI</a> to get a secret API token for this app, then paste it in this field.
     </div>
   )
 
@@ -235,7 +235,7 @@ export default function ManagePage() {
 
         <h1 className="text-center text-2xl font-light mb-4">Read Books 📚</h1>
         <div className="text-center text-l font-light mb-4 text-blue-500">
-          Download your Goodreads history <a href="https://www.goodreads.com/review/import">here</a>
+          Download your Goodreads history <a href="https://www.goodreads.com/review/import" target="_blank">here</a>
         </div>
 
         <div className="flex flex-col items-center justify-center p-3">
