@@ -12,19 +12,13 @@ import { parse } from 'papaparse'
 import { useState } from "react"
 import { CSVLink } from "react-csv";
 
-function exportCSV(books: Book[]) {
-  const data = books.map(({ title, author, explanation, date_generated }) => ({
+function booksToCSVData(books: Book[]) {
+  return books.map(({ title, author, explanation, date_generated }) => ({
     title,
     author,
     explanation,
     date_generated,
   }));
-
-  return (
-    <CSVLink data={data} filename={"recommendations.csv"}>
-      Export
-    </CSVLink>
-  );
 }
 
 function formatReadBooks(bookList: ReadBook[]) {
@@ -230,7 +224,9 @@ export default function ManagePage() {
                 Generate
               </Button>
               <Button type="primary" icon={<DownloadOutlined />}>
-                {exportCSV(Object.values(recList))}
+              <CSVLink data={booksToCSVData(Object.values(recList || {}))} filename={"recommendations.csv"}>
+                Export
+              </CSVLink>
               </Button>
               <ConfirmationButton
                 initialText="Clear"
