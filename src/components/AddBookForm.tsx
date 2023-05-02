@@ -55,7 +55,7 @@ export const AddBookForm: React.FC<Props> = ({ addRead }) => {
       <Form.Item name="author" label="" rules={[{ required: true, message: 'Please input the author!' }]} style={{ display: 'inline-block' }}>
         <Input placeholder="Author" name="author" value={newBook.author} onChange={handleInputChange} />
       </Form.Item>
-      <Form.Item name="rating" label="" rules={[{ required: true, message: 'Please input the rating!' }]} style={{ display: 'inline-block' }}>
+      <Form.Item name="rating" label="" rules={[{ required: false, message: 'Please input the rating!' }]} style={{ display: 'inline-block' }}>
         <Rate
           character={<StarFilled />}
           value={newBook.rating}
