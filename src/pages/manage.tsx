@@ -5,11 +5,27 @@ import RecommendationTable from "@/components/RecommendationTable"
 import useLocalStorage from "@/hooks/useLocalStorage"
 import useLocalStorageObject from "@/hooks/useLocalStorageObject"
 import { Book, GoodreadsCSVRow, ReadBook } from "@/types/types"
-import { QuestionCircleOutlined, UploadOutlined } from '@ant-design/icons'
-import { Button, Form, Input, Popover, Space, Table, Upload } from 'antd'
+import { QuestionCircleOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons'
+import { Button, Form, Input, Popover, Upload } from 'antd'
 import Head from "next/head"
 import { parse } from 'papaparse'
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { CSVLink } from "react-csv";
+
+function exportCSV(books: Book[]) {
+  const data = books.map(({ title, author, explanation, date_generated }) => ({
+    title,
+    author,
+    explanation,
+    date_generated,
+  }));
+
+  return (
+    <CSVLink data={data} filename={"recommendations.csv"}>
+      Export
+    </CSVLink>
+  );
+}
 
 function formatReadBooks(bookList: ReadBook[]) {
   let output = ""
@@ -23,21 +39,20 @@ function generateRecommendationsPrompt(
   bookList: ReadBook[], num_recs: Number, point: Number,
 ) {
   return `
-You are LibrarianGPT, a recommendation system that strives to give good book recommendations.
-Recommend ${num_recs} books that the I have not read that you think I would really enjoy based the books I've read and my ratings.
-The ratings are on a ${point} point scale where 1 is the worst, meaning I disliked the book and ${point} is the best, meaning I loved the book.
-Explain why you made your recommendations in detail, including why you think I will like them in the context of books and genres I have already read.
-Recommend books from any genres.
-Recommend books from any time period.
-Recommend unique books that are not often suggested.
+You are LibrarianGPT, an excellent recommendation system that strives to give good book recommendations.
+Recommend ${num_recs} books that the I have not read that you think I would really enjoy based the books I've already read and ratings.
+They higher the rating, the more I liked the book.
+Recommend books from a diverse set of genres and time periods.
+Occasionally, recommend unique books that are not often suggested.
 Do not recommend books already in the ratings list.
 Ratings of "0" should be considered "not rated".
+Explain why you made your recommendations in detail, including why you think I will like them in the context of books and genres I have already read.
+
 My book ratings:
 
 ${formatReadBooks(bookList)}
 
-Format your recomendations as an array of JSON objects with keys for "title", "author" and "explanation".
-For example:
+Format your recomendations as an array of JSON objects like the following example:
 
 [
   {
@@ -193,7 +208,7 @@ export default function ManagePage() {
             </div>
           </div>
           <Form.Item className="flex flex-col items-center justify-center p-3">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <Button
                 type="primary"
                 onClick={() => {
@@ -213,6 +228,9 @@ export default function ManagePage() {
                 loading={loadingRecs}
               >
                 Generate
+              </Button>
+              <Button type="primary" icon={<DownloadOutlined />}>
+                {exportCSV(Object.values(recList))}
               </Button>
               <ConfirmationButton
                 initialText="Clear"
@@ -241,7 +259,7 @@ export default function ManagePage() {
               showUploadList={false}
               beforeUpload={handleFile}
             >
-              <Button type="primary" icon={<UploadOutlined />}>Upload CSV</Button>
+              <Button type="primary" icon={<UploadOutlined />}>Upload</Button>
             </Upload>
             <ConfirmationButton initialText="Clear" confirmationText="Confirm" actionOnConfirm={clearReadsList}></ConfirmationButton>
           </div>
