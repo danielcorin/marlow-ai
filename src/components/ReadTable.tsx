@@ -21,22 +21,22 @@ const ReadTable: React.FC<Props> = ({
       title: 'Title',
       dataIndex: 'title',
       key: 'title',
-      sorter: (a, b) => a.title.localeCompare(b.title)
+      sorter: (a, b) => a.title.localeCompare(b.title),
     },
     {
       title: 'Author',
       dataIndex: 'author',
       key: 'author',
-      sorter: (a, b) => a.author.localeCompare(b.author)
+      sorter: (a, b) => a.author.localeCompare(b.author),
     },
     {
       title: 'Rating',
       dataIndex: 'rating',
       key: 'rating',
-      sorter: (a, b) => a.rating - b.rating
+      sorter: (a, b) => a.rating - b.rating,
     },
     {
-      title: 'Date Completed',
+      title: 'Completed',
       dataIndex: 'dateCompleted',
       key: 'dateCompleted',
       sorter: (a, b) => {
@@ -46,33 +46,33 @@ const ReadTable: React.FC<Props> = ({
           return 1;
         }
         return new Date(a.dateCompleted).getTime() - new Date(b.dateCompleted).getTime();
-      }
+      },
     },
-    {
-      title: 'Action',
-      dataIndex: 'action',
-      key: 'action',
-      render: (_, record: ReadBook) => (
-        <Space size="middle">
-          <div
-            className="text-blue-500 hover:text-blue-700 cursor-pointer"
-            onClick={() => removeRead(record)}
-          >
-            remove
-          </div>
-        </Space>
-      )
-    }
+    // {
+    //   title: 'Action',
+    //   dataIndex: 'action',
+    //   key: 'action',
+    //   render: (_, record: ReadBook) => (
+    //     <Space size="middle">
+    //       <div
+    //         className="text-blue-500 hover:text-blue-700 cursor-pointer"
+    //         onClick={() => removeRead(record)}
+    //       >
+    //         remove
+    //       </div>
+    //     </Space>
+    //   )
+    // }
   ];
 
   return (
     <Table
       dataSource={dataSource}
+      columns={columns}
       pagination={false}
       className="mb-8"
       rowSelection={rowSelection}
       rowKey="title"
-      columns={columns}
       size="small"
     />
   );

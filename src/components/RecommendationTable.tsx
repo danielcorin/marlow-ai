@@ -99,7 +99,7 @@ const RecommendationTable: React.FC<Props> = ({ recList, removeRec, addRead }) =
         columns={columns}
         pagination={false}
         className="mb-8"
-        scroll={{ x: 650 }}
+        scroll={{ x: 500 }}
         rowKey="title"
         size="small"
       />

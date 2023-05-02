@@ -69,10 +69,6 @@ export default function ManagePage() {
 
   const [loadingRecs, setLoadingRecs] = useState<boolean>(false)
 
-  useEffect(() => {
-    setApiToken("")
-  }, [])
-
   function requestCompletion(apiKey: string, content: string) {
     setLoadingRecs(true)
     const headers = {
@@ -178,21 +174,21 @@ export default function ManagePage() {
           form={form}
           layout="vertical"
         >
-          <div className="relative">
+          <div className="flex items-center">
             <Input.Password
               placeholder="OPENAI_API_TOKEN"
               value={apiToken}
-              className="pr-10"
+              className="w-90"
               style={{ paddingRight: "2.5rem" }}
               onChange={handleApiTokenInputChange}
             />
-            <div className="absolute inset-y-0 right-0 flex items-center justify-center w-8">
+            <div className="text-gray-400 ml-2">
               <Popover overlayStyle={{ width: "350px" }}
                 content={apiContent}
                 title="OpenAI API Token"
-                className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                className="cursor-pointer"
               >
-                <QuestionCircleOutlined className="text-gray-500" />
+                <QuestionCircleOutlined />
               </Popover>
             </div>
           </div>
