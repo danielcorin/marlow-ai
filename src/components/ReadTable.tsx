@@ -48,21 +48,21 @@ const ReadTable: React.FC<Props> = ({
         return new Date(a.dateCompleted).getTime() - new Date(b.dateCompleted).getTime();
       },
     },
-    // {
-    //   title: 'Action',
-    //   dataIndex: 'action',
-    //   key: 'action',
-    //   render: (_, record: ReadBook) => (
-    //     <Space size="middle">
-    //       <div
-    //         className="text-blue-500 hover:text-blue-700 cursor-pointer"
-    //         onClick={() => removeRead(record)}
-    //       >
-    //         remove
-    //       </div>
-    //     </Space>
-    //   )
-    // }
+    {
+      title: 'Action',
+      dataIndex: 'action',
+      key: 'action',
+      render: (_, record: ReadBook) => (
+        <Space size="middle">
+          <div
+            className="text-blue-500 hover:text-blue-700 cursor-pointer"
+            onClick={() => removeRead(record)}
+          >
+            remove
+          </div>
+        </Space>
+      )
+    }
   ];
 
   return (
