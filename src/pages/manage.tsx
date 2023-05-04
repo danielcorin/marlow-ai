@@ -1,4 +1,5 @@
 import { AddBookForm } from "@/components/AddBookForm"
+import { BookSearch } from "@/components/BookSearch"
 import ConfirmationButton from "@/components/ConfirmationButton"
 import ReadTable from "@/components/ReadTable"
 import RecommendationTable from "@/components/RecommendationTable"
@@ -225,7 +226,7 @@ export default function ManagePage() {
               </Button>
               <Button type="primary" icon={<DownloadOutlined />}>
               <CSVLink data={booksToCSVData(Object.values(recList || {}))} filename={"recommendations.csv"}>
-                Export
+                Download
               </CSVLink>
               </Button>
               <ConfirmationButton
@@ -261,6 +262,7 @@ export default function ManagePage() {
           </div>
         </div>
 
+        <BookSearch addRead={addRead}/>
         <AddBookForm addRead={addRead} />
 
         <ReadTable readList={readList} removeRead={removeRead} rowSelection={rowSelection} />

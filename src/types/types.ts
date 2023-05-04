@@ -12,6 +12,12 @@ export type ReadBook = {
   dateCompleted?: string,
 };
 
+export type SearchBook = {
+  id: string
+  title: string
+  author: string
+}
+
 export type GoodreadsCSVRow = {
   "Book Id": string,
   "Title": string,
