@@ -13,7 +13,7 @@ const StarRatingPicker: React.FC<StarRatingPickerProps> = ({ value = 0, onChange
       character={<StarFilled />}
       value={value}
       onChange={onChange}
-      tooltips={["Didn't like it", "It was ok", "Liked it", "Really like it", "It was amazing"]}
+      tooltips={["Didn't like it", "It was ok", "Liked it", "Really liked it", "It was amazing"]}
     />
   )
 }
