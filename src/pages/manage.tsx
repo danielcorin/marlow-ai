@@ -265,7 +265,7 @@ export default function ManagePage() {
         <BookSearch addRead={addRead}/>
         <AddBookForm addRead={addRead} />
 
-        <ReadTable readList={readList} removeRead={removeRead} rowSelection={rowSelection} />
+        <ReadTable readList={readList} removeRead={removeRead} updateRead={updateRead} rowSelection={rowSelection} />
       </div>
     </div>
   )

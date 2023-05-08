@@ -1,21 +1,30 @@
-import React from 'react';
-import { Table, Space } from 'antd';
+import React, { useState } from 'react';
+import { Table, Space, Popover } from 'antd';
 import { ColumnType } from 'antd/lib/table';
 import { ReadBook } from '@/types/types';
+import StarRatingPicker from './StartRatingPicker';
 
 interface Props {
   readList: Record<string, ReadBook>;
   removeRead: (book: ReadBook) => void;
+  updateRead: (book: ReadBook) => void,
   rowSelection: any;
 }
 
 const ReadTable: React.FC<Props> = ({
   readList,
   removeRead,
-  rowSelection
+  updateRead,
+  rowSelection,
 }) => {
   const dataSource = readList ? Object.values(readList) : [];
 
+  const ratingPopoverContent = (value: number, onChange: ((value: number) => void)) => (
+    <StarRatingPicker
+      value={value}
+      onChange={onChange}
+    />
+  )
   const columns: ColumnType<ReadBook>[] = [
     {
       title: 'Title',
@@ -34,6 +43,25 @@ const ReadTable: React.FC<Props> = ({
       dataIndex: 'rating',
       key: 'rating',
       sorter: (a, b) => a.rating - b.rating,
+      render: (text: string, record: any) => (
+        <Popover
+          content={
+            ratingPopoverContent(record.rating, (rating: number) => {
+              const updatedReadBook: ReadBook = {
+                title: record.title,
+                author: record.author,
+                rating: rating,
+                dateCompleted: record.date,
+              }
+              updateRead(updatedReadBook)
+            })
+          }
+          title='Change rating'
+          trigger="hover"
+        >
+          {record.rating}
+        </Popover>
+      )
     },
     {
       title: 'Completed',
