@@ -33,10 +33,8 @@ export const BookSearch: React.FC<Props> = ({ addRead }) => {
   const [books, setBooks] = useState<SearchBook[]>([])
   const [items, setItems] = useState<MenuProps['items']>([])
   const [query, setQuery] = useState<string>("")
-  const inputRef= useRef<InputRef>(null);
 
   const onItemClick = (book: SearchBook) => {
-    console.log(book)
     setDropdownOpen(false)
     setQuery("")
     addRead({
@@ -46,24 +44,10 @@ export const BookSearch: React.FC<Props> = ({ addRead }) => {
     })
   };
 
-  // useEffect(() => {
-  //   const handleClickOutside = (event: MouseEvent) => {
-  //     console.log(event)
-  //     if (inputRef.current) {
-  //       setDropdownOpen(false)
-  //       setQuery("")
-  //     }
-  //   };
-
-  //   document.addEventListener('mousedown', handleClickOutside);
-  //   return () => document.removeEventListener('mousedown', handleClickOutside);
-  // }, [inputRef]);
-
   const onSearch = async (query: string) => {
     if (query === "") {
       return
     }
-    console.log("search")
     try {
       const response = await fetch(`/api/search?q=${query}`)
       const data = await response.json()
@@ -86,7 +70,6 @@ export const BookSearch: React.FC<Props> = ({ addRead }) => {
     >
       <a onClick={(e) => e.preventDefault()}>
         <Search
-          ref={inputRef}
           placeholder="Search books"
           allowClear
           enterButton="Search"

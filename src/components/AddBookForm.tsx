@@ -39,7 +39,6 @@ export const AddBookForm: React.FC<Props> = ({ addRead }) => {
 
   const handleDateChange = (date: Dayjs | null, dateString: string) => {
     const completed = date?.format(dateFormat)
-    console.log(completed)
     setNewBook((prevBook) => ({ ...prevBook, ["dateCompleted"]: completed }))
   }
 

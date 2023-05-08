@@ -1,33 +1,17 @@
 import React, { useState } from 'react'
-import { DatePicker, Input, Popover, Rate } from 'antd'
-import { StarFilled } from '@ant-design/icons'
+import { DatePicker, Popover} from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
-
-interface StarRatingPickerProps {
-  value?: number
-  onChange?: (value: number) => void
-}
-
-const StarRatingPicker: React.FC<StarRatingPickerProps> = ({ value = 0, onChange }) => {
-  return (
-    <Rate
-      character={<StarFilled />}
-      value={value}
-      onChange={onChange}
-      tooltips={["Didn't like it", "It was ok", "Liked it", "Really like it", "It was amazing"]}
-    />
-  )
-}
+import StarRatingPicker from './StartRatingPicker'
 
 interface StarRatingPopoverProps {
   title?: string
-  onRateChange?: (value: number, date: string) => void
+  onRatingChange?: (value: number, date: string) => void
   rootContent: React.ReactNode,
 }
 
 const StarRatingPopover: React.FC<StarRatingPopoverProps> = ({
   title = "What did you think?",
-  onRateChange,
+  onRatingChange,
   rootContent,
 }) => {
   const [rating, setRating] = useState<number>(0)
@@ -40,8 +24,8 @@ const StarRatingPopover: React.FC<StarRatingPopoverProps> = ({
 
   const handleRatingChange = (value: number) => {
     setRating(value)
-    if (onRateChange) {
-      onRateChange(value, dateCompleted)
+    if (onRatingChange) {
+      onRatingChange(value, dateCompleted)
     }
   }
 
