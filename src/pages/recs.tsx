@@ -1,14 +1,16 @@
+import { AddBookForm } from "@/components/AddBookForm"
+import { BookSearch } from "@/components/BookSearch"
 import ConfirmationButton from "@/components/ConfirmationButton"
 import { SiteMenu } from "@/components/SiteMenu"
 import useLocalStorage from "@/hooks/useLocalStorage"
 import useLocalStorageObject from "@/hooks/useLocalStorageObject"
 import { Book, ReadBook } from "@/types/types"
-import { QuestionCircleOutlined, PlusCircleOutlined, MinusCircleOutlined } from '@ant-design/icons'
-import { Button, Form, Input, Popover, Carousel, Card } from 'antd'
-import Head from "next/head"
-import { useState } from "react"
-import Link from 'next/link'
+import { MinusCircleOutlined, PlusCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons'
+import { Button, Card, Form, Input, Popover } from 'antd'
 import Meta from "antd/es/card/Meta"
+import Head from "next/head"
+import Link from 'next/link'
+import { useState } from "react"
 
 
 function formatReadBooks(bookList: ReadBook[]) {
@@ -268,14 +270,9 @@ export default function RecsPage() {
             </Card>
           )
         })}
+        <BookSearch addRead={readHook.addItem}/>
+        <AddBookForm addRead={readHook.addItem} />
 
-<<<<<<< Updated upstream:src/pages/manage.tsx
-        <BookSearch addRead={addRead}/>
-        <AddBookForm addRead={addRead} />
-
-        <ReadTable readList={readList} removeRead={removeRead} rowSelection={rowSelection} />
-=======
->>>>>>> Stashed changes:src/pages/recs.tsx
       </div>
     </div>
   )

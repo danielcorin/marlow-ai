@@ -65,7 +65,7 @@ const RecommendationTable: React.FC<Props> = ({ recList, removeRec, addRead }) =
           >
             <StarRatingPopover
               rootContent={<>read</>}
-              onRateChange={
+              onRatingChange={
                 (rating: number, date: string) => {
                   removeRec(record)
                   const newReadBook: ReadBook = {
