@@ -270,9 +270,6 @@ export default function RecsPage() {
             </Card>
           )
         })}
-        <BookSearch addRead={readHook.addItem}/>
-        <AddBookForm addRead={readHook.addItem} />
-
       </div>
     </div>
   )
