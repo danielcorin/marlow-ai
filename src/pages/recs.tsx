@@ -7,7 +7,6 @@ import useLocalStorageObject from "@/hooks/useLocalStorageObject"
 import { Book, ReadBook } from "@/types/types"
 import { MinusCircleOutlined, PlusCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import { Button, Card, Form, Input, Popover } from 'antd'
-import Meta from "antd/es/card/Meta"
 import Head from "next/head"
 import Link from 'next/link'
 import { useState } from "react"
@@ -257,7 +256,7 @@ export default function RecsPage() {
                 <MinusCircleOutlined key="remove" onClick={() => removeBook(book)} />,
               ]}
             >
-              <Meta
+              <Card.Meta
                 title={book.title}
                 description={book.author}
               />
