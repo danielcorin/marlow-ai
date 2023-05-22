@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 
+type LocalStorageObject<T extends { title: string }> = {
+  items: { [key: string]: T };
+  setItems: React.Dispatch<React.SetStateAction<{ [key: string]: T }>>;
+  removeItem: (item: T) => void;
+  addItem: (item: T) => void;
+  addItems: (items: T[]) => void;
+  updateItem: (item: T) => void;
+  clearItems: () => void;
+};
+
 const useLocalStorageList = <T extends { title: string }>(
   key: string,
   initialValue: T[]
-): [
-    { [key: string]: T },
-    React.Dispatch<React.SetStateAction<{ [key: string]: T }>>,
-    (item: T) => void,
-    (item: T) => void,
-    (item: T[]) => void,
-    (item: T) => void,
-    () => void
-  ] => {
-  const [list, setList] = useState<{ [key: string]: T }>(() => {
+): LocalStorageObject<T> => {
+  const [items, setItems] = useState<{ [key: string]: T }>(() => {
     let storedValue;
     if (typeof window !== "undefined") {
       storedValue = localStorage.getItem(key);
@@ -30,53 +32,61 @@ const useLocalStorageList = <T extends { title: string }>(
   });
 
   const removeItem = (item: T) => {
-    setList((prevList) => {
-      const newList = { ...prevList };
-      delete newList[item.title];
-      localStorage.setItem(key, JSON.stringify(newList));
-      return newList;
+    setItems((prevItems) => {
+      const newItems = { ...prevItems };
+      delete newItems[item.title];
+      localStorage.setItem(key, JSON.stringify(newItems));
+      return newItems;
     });
   };
 
   const addItem = (item: T) => {
-    setList((prevList) => {
-      const newList = { ...prevList, [item.title]: item };
-      localStorage.setItem(key, JSON.stringify(newList));
-      return newList;
+    setItems((prevItems) => {
+      const newItems = { ...prevItems, [item.title]: item };
+      localStorage.setItem(key, JSON.stringify(newItems));
+      return newItems;
     });
   };
 
   const addItems = (items: T[]) => {
-    setList((prevList) => {
-      const newList = items.reduce((acc, item) => {
+    setItems((prevItems) => {
+      const newItems = items.reduce((acc, item) => {
         acc[item.title] = item;
         return acc;
-      }, { ...prevList });
-      localStorage.setItem(key, JSON.stringify(newList));
-      return newList;
+      }, { ...prevItems });
+      localStorage.setItem(key, JSON.stringify(newItems));
+      return newItems;
     });
   };
 
   const updateItem = (item: T) => {
-    setList((prevList) => {
-      const newList = { ...prevList, [item.title]: item };
-      localStorage.setItem(key, JSON.stringify(newList));
-      return newList;
+    setItems((prevItems) => {
+      const newItems = { ...prevItems, [item.title]: item };
+      localStorage.setItem(key, JSON.stringify(newItems));
+      return newItems;
     });
   };
 
-  const clearList = () => {
-    setList({});
+  const clearItems = () => {
+    setItems({});
     localStorage.removeItem(key);
   };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem(key, JSON.stringify(list));
+      localStorage.setItem(key, JSON.stringify(items));
     }
-  }, [key, list]);
+  }, [key, items]);
 
-  return [list, setList, removeItem, addItem, addItems, updateItem, clearList];
+  return {
+    items,
+    setItems,
+    removeItem,
+    addItem,
+    addItems,
+    updateItem,
+    clearItems,
+  };
 };
 
 export default useLocalStorageList;

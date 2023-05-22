@@ -1,12 +1,14 @@
-import Head from 'next/head';
-import Link from 'next/link';
-
+import Head from 'next/head'
+import Link from 'next/link'
+import { SiteMenu } from '@/components/SiteMenu'
 
 export default function LandingPage() {
+  const currentPage = "home";
   return (
     <div className="min-h-screen">
+      <SiteMenu currentPage={currentPage} />
       <Head>
-        <title>home - marlow.ai</title>
+        <title>{`${currentPage} - marlow.ai`}</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -20,7 +22,12 @@ export default function LandingPage() {
             <span className="absolute top-0 left-0 text-gray-500 text-4xl">&ldquo;</span>
           </p>
         </div>
-        <Link className="text-m mb-8 font-light" href="/manage">
+        <ul className="list-none text-light font-light pl-0 ml-0">
+          <li className="list-desc">Add books to library</li>
+          <li className="list-desc">Generate recommendations</li>
+          <li className="list-desc">Add ones you like to your pile to read</li>
+        </ul>
+        <Link className="text-m mb-8 font-light" href="/library">
           Try it out
         </Link>
 
