@@ -1,12 +1,14 @@
-import Head from 'next/head';
-import Link from 'next/link';
-
+import Head from 'next/head'
+import Link from 'next/link'
+import { SiteMenu } from '@/components/SiteMenu'
 
 export default function LandingPage() {
+  const currentPage = "home";
   return (
     <div className="min-h-screen">
+      <SiteMenu currentPage={currentPage} />
       <Head>
-        <title>home - marlow.ai</title>
+        <title>{`${currentPage} - marlow.ai`}</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 

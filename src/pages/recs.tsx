@@ -1,26 +1,15 @@
-import { AddBookForm } from "@/components/AddBookForm"
-import { BookSearch } from "@/components/BookSearch"
 import ConfirmationButton from "@/components/ConfirmationButton"
-import ReadTable from "@/components/ReadTable"
-import RecommendationTable from "@/components/RecommendationTable"
+import { SiteMenu } from "@/components/SiteMenu"
 import useLocalStorage from "@/hooks/useLocalStorage"
 import useLocalStorageObject from "@/hooks/useLocalStorageObject"
-import { Book, GoodreadsCSVRow, ReadBook } from "@/types/types"
-import { QuestionCircleOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons'
-import { Button, Form, Input, Popover, Upload } from 'antd'
+import { Book, ReadBook } from "@/types/types"
+import { QuestionCircleOutlined, PlusCircleOutlined, MinusCircleOutlined } from '@ant-design/icons'
+import { Button, Form, Input, Popover, Carousel, Card } from 'antd'
 import Head from "next/head"
-import { parse } from 'papaparse'
 import { useState } from "react"
-import { CSVLink } from "react-csv";
+import Link from 'next/link'
+import Meta from "antd/es/card/Meta"
 
-function booksToCSVData(books: Book[]) {
-  return books.map(({ title, author, explanation, date_generated }) => ({
-    title,
-    author,
-    explanation,
-    date_generated,
-  }));
-}
 
 function formatReadBooks(bookList: ReadBook[]) {
   let output = ""
@@ -30,8 +19,17 @@ function formatReadBooks(bookList: ReadBook[]) {
   return output
 }
 
+function formatRecBooks(bookList: Book[]) {
+  let output = ""
+  for (const book of bookList) {
+    output += `${book.title} - ${book.author}\n`
+  }
+  return output
+}
+
+
 function generateRecommendationsPrompt(
-  bookList: ReadBook[], num_recs: Number, point: Number,
+  bookList: ReadBook[], recList: Book[], num_recs: Number, point: Number,
 ) {
   return `
 You are LibrarianGPT, an excellent recommendation system that strives to give good book recommendations.
@@ -39,37 +37,65 @@ Recommend ${num_recs} books that the I have not read that you think I would real
 They higher the rating, the more I liked the book.
 Recommend books from a diverse set of genres and time periods.
 Occasionally, recommend unique books that are not often suggested.
-Do not recommend books already in the ratings list.
+Do not recommend books already in the the lists.
 Ratings of "0" should be considered "not rated".
 Explain why you made your recommendations in detail, including why you think I will like them in the context of books and genres I have already read.
+
+You are LibrarianGPT, an excellent recommendation system that strives to give good book recommendations.
+Recommend 5 books that the user has not read that you think they will enjoy based the books they're already read and ratings.
+Recommend books from a diverse set of genres and time periods.
+Occasionally, recommend unique books that are not often suggested.
+Do not recommend books already in the the lists.
+Ratings of "0" should be considered "not rated".
+Explain why you made your recommendations in detail, including why the user would like them in the context of books and genres they have already read.
+
+${formatRecBooks(recList)}
 
 My book ratings:
 
 ${formatReadBooks(bookList)}
 
-Format your recomendations as an array of JSON objects like the following example:
+Your response should be JSON, adhering to the following schema:
 
-[
-  {
-    "title": "The Overstory", "author": "Richard Powers", "explanation": "your explanation here"
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string"
+      },
+      "author": {
+        "type": "string"
+      },
+      "explanation": {
+        "type": "string"
+      }
+    },
+    "required": ["title", "author", "explanation"]
   }
-]
-
-Your recommendations:
-`
+}
+`.replace(/\s\([^()]*\)/g, '') // remove series identifiers
 }
 
-export default function ManagePage() {
+const systemPrompt = `
+You are LibrarianGPT, an excellent recommendation system that strives to give good book recommendations.
+Recommend 5 books that the user has not read that you think they will enjoy based the books they're already read and ratings.
+Recommend books from a diverse set of genres and time periods.
+Occasionally, recommend unique books that are not often suggested.
+Do not recommend books already in the the lists.
+Ratings of "0" should be considered "not rated".
+Explain why you made your recommendations in detail, including why the user would like them in the context of books and genres they have already read.
+`
+
+export default function RecsPage() {
   const [form] = Form.useForm()
 
-  const [
-    recList, setRecList, removeRec, addRec, addRecs, updateRec, clearRecList,
-  ] = useLocalStorageObject<Book>("recommendations_obj", [])
-  const [
-    readList, setReadList, removeRead, addRead, addReads, updateRead, clearReadsList,
-  ] = useLocalStorageObject<ReadBook>("read", [])
-
-  const [selectedReadBooks, setSelectedReadBooks] = useState<ReadBook[]>([])
+  const recommendationsHook = useLocalStorageObject<Book>("recommendations_obj", [])
+  const readHook = useLocalStorageObject<ReadBook>("read", [])
+  const proposedHook = useLocalStorageObject<Book>("proposed", [])
+  const removedHook = useLocalStorageObject<Book>("removed", [])
 
   const [apiToken, setApiToken] = useLocalStorage("token", "")
 
@@ -88,7 +114,10 @@ export default function ManagePage() {
 
     const data = {
       model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: content }],
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: content }
+      ],
       temperature: 0.75
     }
 
@@ -103,7 +132,7 @@ export default function ManagePage() {
         const content = data["choices"][0]["message"]["content"]
         const recommendations = JSON.parse(content)
         setLoadingRecs(false)
-        const newRecs: Book[] = []
+        const newProposedRecs: Book[] = []
         for (const rec of recommendations) {
           const newRec: Book = {
             title: rec["title"],
@@ -111,36 +140,14 @@ export default function ManagePage() {
             explanation: rec["explanation"],
             date_generated: new Date().toISOString().slice(0, 10),
           }
-          newRecs.push(newRec)
+          newProposedRecs.push(newRec)
         }
-        addRecs(newRecs)
+        proposedHook.addItems(newProposedRecs)
       })
       .catch(error => {
         setLoadingRecs(false)
         console.error(error)
       })
-  }
-
-  const handleFile = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const csv = parse<GoodreadsCSVRow>(reader.result as string, { header: true })
-
-      const booksToAdd: ReadBook[] = []
-      for (const row of csv.data) {
-        if (row["Exclusive Shelf"] === "read") {
-          const completed: (string | undefined) = row["Date Read"] === "" ? undefined : row["Date Read"].replaceAll("/", "-")
-          booksToAdd.push({
-            title: row["Title"],
-            author: row["Author"],
-            rating: parseInt(row["My Rating"], 10),
-            dateCompleted: completed,
-          })
-        }
-      }
-      addReads(booksToAdd)
-    }
-    reader.readAsText(file)
   }
 
   function pointScale(readBooks: ReadBook[]) {
@@ -159,25 +166,29 @@ export default function ManagePage() {
     </div>
   )
 
-  const rowSelection = {
-    onChange: (selectedRowKeys: React.Key[], selectedRows: ReadBook[]) => {
-      setSelectedReadBooks(selectedRows)
-    },
+  const addBook = (book: Book) => {
+    recommendationsHook.addItem(book)
+    proposedHook.removeItem(book)
   }
+
+  const removeBook = (book: Book) => {
+    proposedHook.removeItem(book)
+    removedHook.addItem(book)
+  }
+
+  const currentPage = "recs"
 
   return (
     <div className="min-h-screen font-sans">
-
+      <SiteMenu currentPage={currentPage} />
       <Head>
-        <title>book recs - marlow.ai</title>
+        <title>{`${currentPage} - marlow.ai`}</title>
       </Head>
       <div className="max-w-3xl mx-auto mt-8">
-        <h1 className="text-4xl font-bold mb-8 text-center">marlow.ai ✨</h1>
-        <h1 className="text-center text-2xl font-light mb-4">Recommendations 🤖</h1>
         {
-          Object.values(readList || []).length === 0 ?
+          Object.values(readHook.items || []).length === 0 ?
             <div className="text-center text-l font-light mb-4 text-blue-500">
-              Add books you&apos;ve read below before you generate recommendations
+              Add books to your <Link className="text-m mb-8 font-light" href="/library">library</Link> before generating recommendations
             </div> : null
         }
         <Form
@@ -203,17 +214,16 @@ export default function ManagePage() {
             </div>
           </div>
           <Form.Item className="flex flex-col items-center justify-center p-3">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 type="primary"
                 onClick={() => {
-                  const list = Object.values(
-                    selectedReadBooks.length !== 0 ? selectedReadBooks : readList
-                  )
+                  const list = Object.values(readHook.items)
 
                   if (list.length === 0) return
                   const prompt: string = generateRecommendationsPrompt(
                     list,
+                    Object.values(recommendationsHook.items),
                     5,
                     pointScale(list),
                   )
@@ -224,48 +234,48 @@ export default function ManagePage() {
               >
                 Generate
               </Button>
-              <Button type="primary" icon={<DownloadOutlined />}>
-              <CSVLink data={booksToCSVData(Object.values(recList || {}))} filename={"recommendations.csv"}>
-                Download
-              </CSVLink>
-              </Button>
               <ConfirmationButton
                 initialText="Clear"
                 confirmationText="Confirm"
-                actionOnConfirm={clearRecList}
+                actionOnConfirm={proposedHook.clearItems}
               />
             </div>
           </Form.Item>
         </Form>
 
-        <RecommendationTable
-          recList={recList}
-          removeRec={removeRec}
-          addRead={addRead}
-        />
-
-        <h1 className="text-center text-2xl font-light mb-4">Read Books 📚</h1>
-        <div className="text-center text-l font-light mb-4 text-blue-500">
-          Download your Goodreads history <a href="https://www.goodreads.com/review/import" target="_blank">here</a>
-        </div>
-
-        <div className="flex flex-col items-center justify-center p-3">
-          <div className="grid grid-cols-2 gap-2">
-            <Upload
-              accept=".csv"
-              showUploadList={false}
-              beforeUpload={handleFile}
+        {Object.values(proposedHook.items || []).map(book => {
+          return (
+            <Card
+              className="my-6"
+              bordered={true}
+              key={book.title}
+              hoverable={true}
+              actions={[
+                <PlusCircleOutlined key="add" onClick={() => addBook(book)} />,
+                <MinusCircleOutlined key="remove" onClick={() => removeBook(book)} />,
+              ]}
             >
-              <Button type="primary" icon={<UploadOutlined />}>Upload</Button>
-            </Upload>
-            <ConfirmationButton initialText="Clear" confirmationText="Confirm" actionOnConfirm={clearReadsList}></ConfirmationButton>
-          </div>
-        </div>
+              <Meta
+                title={book.title}
+                description={book.author}
+              />
+              <div className="flex justify-center mt-3">
+                <div>
+                  {book.explanation}
+                </div>
+                <div>&nbsp;</div>
+              </div>
+            </Card>
+          )
+        })}
 
+<<<<<<< Updated upstream:src/pages/manage.tsx
         <BookSearch addRead={addRead}/>
         <AddBookForm addRead={addRead} />
 
         <ReadTable readList={readList} removeRead={removeRead} rowSelection={rowSelection} />
+=======
+>>>>>>> Stashed changes:src/pages/recs.tsx
       </div>
     </div>
   )
