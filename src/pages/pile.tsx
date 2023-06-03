@@ -38,7 +38,7 @@ export default function PilePage() {
         >
           <Form.Item className="flex flex-col items-center justify-center p-3">
             <div className="grid grid-cols-2 gap-2">
-              {Object.values(recHook.items).length !== 0 ?
+              {Object.values(recHook.items || {}).length !== 0 ?
                 <Button type="primary" icon={<DownloadOutlined />}>
                   <CSVLink data={booksToCSVData(Object.values(recHook.items || {}))} filename={"recommendations.csv"}>
                     Download
