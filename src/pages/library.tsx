@@ -10,12 +10,19 @@ import { Button, Upload } from 'antd'
 import Head from "next/head"
 import { parse } from 'papaparse'
 import { useState } from "react"
+import { CSVLink } from "react-csv"
 
 
 export default function LibraryPage() {
   const readHook = useLocalStorageObject<ReadBook>("read", [])
 
   const [selectedReadBooks, setSelectedReadBooks] = useState<ReadBook[]>([])
+
+  const testCSV = [
+    {title: "Test Title", author: "Test Author"},
+    {title: "Test Title Two", author: "Test Author Two", "My Rating": 3},
+    {title: "Test Title Three", author: "Test Author Three", "My Rating": 2, "Date Read": "2022-02-12"},
+  ]
 
   const handleFile = (file: File) => {
     const reader = new FileReader()
@@ -52,8 +59,8 @@ export default function LibraryPage() {
       <title>{`${currentPage} - marlow.ai`}</title>
       </Head>
       <div className="max-w-3xl mx-auto mt-8">
-        <div className="text-center text-l font-light mb-4 text-blue-500">
-          Download your Goodreads history <a href="https://www.goodreads.com/review/import" target="_blank">here</a>
+      <div className="text-center text-l font-light mb-4 text-blue-500">
+          Download your <a href="https://www.goodreads.com/review/import" target="_blank">Goodreads history</a> or a <CSVLink target="_blank" data={testCSV} filename={"my_books_template.csv"}>CSV template</CSVLink>
         </div>
 
         <div className="flex flex-col items-center justify-center p-3">
