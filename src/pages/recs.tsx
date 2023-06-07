@@ -48,6 +48,8 @@ Do not recommend books already in the the lists.
 Ratings of "0" should be considered "not rated".
 Explain why you made your recommendations in detail, including why the user would like them in the context of books and genres they have already read.
 
+Do not recommend the following:
+
 ${formatRecBooks(recList)}
 
 My book ratings:
@@ -117,7 +119,7 @@ export default function RecsPage() {
         { role: 'system', content: systemPrompt },
         { role: 'user', content: content }
       ],
-      temperature: 0.75
+      temperature: 1.0
     }
 
     fetch('https://api.openai.com/v1/chat/completions', {
